@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pokemon-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pokemon-api
+  template:
+    metadata:
+      labels:
+        app: pokemon-api
+    spec:
+      containers:
+        - name: pokemon-api
+          image: yakiradela/pokemon-api:latest
+          ports:
+            - containerPort: 5000
