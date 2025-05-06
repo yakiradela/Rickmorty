@@ -19,7 +19,7 @@ jobs:
       run: docker build -t ${{ secrets.DOCKER_USERNAME }}/pokemon-api:latest ./rick-and-morty/app
 
     - name: Push Docker Image
-      run: docker push ${{ secrets.DOCKER_USERNAME }}/pokemon-api:latest ./rick-and-morty/app
+      run: docker push ${{ secrets.DOCKER_USERNAME }}/pokemon-api:latest 
 
     - name: Install kubectl
       run: |
