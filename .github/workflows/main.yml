@@ -21,12 +21,13 @@ jobs:
     - name: Push Docker Image
       run: docker push ${{ secrets.DOCKER_USERNAME }}/pokemon-api:latest 
 
-    - name: Download kubectl
+    - name: Install kubectl
       run: |
-       KUBECTL_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
-       curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
-       chmod +x kubectl
-       sudo mv kubectl /usr/local/bin/
+        KUBECTL_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
+        curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/kubectl
+
 
 
 
