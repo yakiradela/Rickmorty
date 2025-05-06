@@ -44,9 +44,9 @@ jobs:
 
     - name: Deploy to Kubernetes
       run: |
-        kubectl apply -f k8s/deployment.yaml
-        kubectl apply -f k8s/service.yaml
-        kubectl apply -f k8s/ingress.yaml
+        kubectl apply -f ./rick-and-morty/k8s/deployment.yaml
+        kubectl apply -f ./rick-and-morty/k8s/service.yaml
+        kubectl apply -f ./rick-and-morty/k8s/ingress.yaml
 
     - name: Verify deployment
       run: kubectl get pods
