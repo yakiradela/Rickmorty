@@ -1,6 +1,6 @@
 name: Build and Deploy
 
-on: 
+on:
   push:
     branches:
       - main
@@ -24,12 +24,18 @@ jobs:
 
     - name: Install kubectl
       run: |
-        KUBECTL_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
-        echo $KUBECTL_VERSION
-        curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
+        # שליפת גרסת kubectl העדכנית
+        KUBECTL_VERSION=$(curl -s https://api.github.com/repos/kubernetes/kubernetes/releases/latest | jq -r .tag_name)
+        echo "הגרסה העדכנית של kubectl היא: $KUBECTL_VERSION"
+        
+        # הורדת kubectl מה-URL המתאים
+        curl -LO https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/amd64/kubectl
+        
+        # הפיכת הקובץ לביצועי
         chmod +x kubectl
+        
+        # העברת kubectl לתיקיית PATH
         sudo mv kubectl /usr/local/bin/
- 
 
     - name: Set up kubeconfig
       run: |
