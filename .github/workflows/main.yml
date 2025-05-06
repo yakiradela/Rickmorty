@@ -24,24 +24,17 @@ jobs:
 
     - name: Install kubectl
       run: |
-        # שליפת גרסת kubectl העדכנית
-        KUBECTL_VERSION=$(curl -s https://api.github.com/repos/kubernetes/kubernetes/releases/latest | jq -r .tag_name)
-        echo "הגרסה העדכנית של kubectl היא: $KUBECTL_VERSION"
-        
-        # הורדת kubectl מה-URL המתאים
-        curl -LO https://dl.k8s.io/release/$KUBECTL_VERSION/bin/linux/amd64/kubectl
-        
-        # הפיכת הקובץ לביצועי
+        KUBECTL_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
+        echo "Kubernetes version: $KUBECTL_VERSION"
+        curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
         chmod +x kubectl
-        
-        # העברת kubectl לתיקיית PATH
         sudo mv kubectl /usr/local/bin/
 
     - name: Set up kubeconfig
       run: |
         echo "${{ secrets.KUBECONFIG }}" > kubeconfig
         export KUBECONFIG=$PWD/kubeconfig
-
+        kubectl config view
 
     - name: Deploy to Kubernetes
       run: |
