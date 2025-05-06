@@ -42,6 +42,7 @@ jobs:
         echo "${{ secrets.KUBECONFIG }}" > kubeconfig
         export KUBECONFIG=$PWD/kubeconfig
 
+
     - name: Deploy to Kubernetes
       run: |
         kubectl apply -f ./rick-and-morty/k8s/deployment.yaml
