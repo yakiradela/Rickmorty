@@ -24,11 +24,12 @@ jobs:
 
     - name: Install kubectl
       run: |
-        KUBECTL_VERSION=$(curl -s https://dl.k8s.io/release/stable.txt)
+        KUBECTL_VERSION="v1.26.0"
         echo "Kubernetes version: $KUBECTL_VERSION"
         curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
         chmod +x kubectl
         sudo mv kubectl /usr/local/bin/
+
 
     - name: Set up kubeconfig
       run: |
