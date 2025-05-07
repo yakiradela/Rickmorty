@@ -39,7 +39,7 @@ jobs:
          aws-region: us-east-2
 
     - name: Set up kubeconfig for EKS
-      run: aws eks update-kubeconfig --region us-eest-2 --name cluster
+      run: aws eks update-kubeconfig --region us-east-2 --name cluster
 
     - name: Deploy to Kubernetes
       run: |
