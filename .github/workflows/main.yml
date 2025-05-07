@@ -22,14 +22,23 @@ jobs:
     - name: Push Docker image
       run: docker push ${{ secrets.DOCKER_USERNAME }}/pokemon-api:latest
 
+    # התקנת kubectl גרסה 1.23.6
     - name: Install kubectl
       run: |
-        KUBECTL_VERSION="v1.26.0"
-        echo "Kubernetes version: $KUBECTL_VERSION"
+        KUBECTL_VERSION="v1.23.6"
         curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
         chmod +x kubectl
         sudo mv kubectl /usr/local/bin/
 
+    # התקנת aws-iam-authenticator (אם תצטרך)
+    - name: Install AWS IAM Authenticator
+      run: |
+        VERSION="0.5.7"
+        curl -Lo aws-iam-authenticator https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v${VERSION}/aws-iam-authenticator_${VERSION}_linux_amd64
+        chmod +x aws-iam-authenticator
+        sudo mv aws-iam-authenticator /usr/local/bin/
+
+    # התחברות ל-AWS
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -37,27 +46,35 @@ jobs:
          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
          aws-region: us-east-2
 
+    # עדכון kubeconfig עם הקלאסטר שלך
     - name: Set up kubeconfig for EKS
-      run: aws eks update-kubeconfig --region us-east-2 --name cluster
-
-    - name: Verify kubeconfig is updated
       run: |
-        echo "Kubeconfig file content:"
+        aws eks update-kubeconfig --region us-east-2 --name cluster
+        # שינוי ל-apiVersion שתואמת לגרסאות עדכניות
+        sed -i 's/client.authentication.k8s.io\/v1alpha1/client.authentication.k8s.io\/v1beta1/g' ~/.kube/config
+
+    # בדיקה שה-kubeconfig תקין
+    - name: Verify kubeconfig
+      run: |
         cat ~/.kube/config
         kubectl config get-contexts
+        kubectl config current-context
 
-    - name: Verify connection to EKS using aws eks get-token
-      run: |
-        aws eks get-token --region us-east-2 --cluster-name cluster
+    # בדיקה שהחיבור לקלאסטר עובד
+    - name: Test EKS Token
+      run: aws eks get-token --region us-east-2 --cluster-name cluster
 
-    - name: Wait before deploying
-      run: sleep 20  # Wait a few more seconds before deploying
+    # המתנה לקונקטור
+    - name: Wait before deployment
+      run: sleep 20
 
+    # פריסה לקוברנטיס
     - name: Deploy to Kubernetes
       run: |
         kubectl apply -f ./rick-and-morty/k8s/deployment.yaml
         kubectl apply -f ./rick-and-morty/k8s/service.yaml
         kubectl apply -f ./rick-and-morty/k8s/ingress.yaml
 
+    # בדיקת הפריסה
     - name: Verify deployment
       run: kubectl get pods
