@@ -31,11 +31,15 @@ jobs:
         sudo mv kubectl /usr/local/bin/
 
 
-    - name: Set up kubeconfig
-      run: |
-        echo "${{ secrets.KUBECONFIG }}" > kubeconfig
-        export KUBECONFIG=$PWD/kubeconfig
-        kubectl config view
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+         aws-region: us-east-2
+
+    - name: Set up kubeconfig for EKS
+      run: aws eks update-kubeconfig --region us-eest-2 --name cluster
 
     - name: Deploy to Kubernetes
       run: |
