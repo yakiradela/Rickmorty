@@ -40,14 +40,18 @@ jobs:
     - name: Set up kubeconfig for EKS
       run: aws eks update-kubeconfig --region us-east-2 --name cluster
 
-    - name: Verify kubeconfig is set up
+    - name: Verify kubeconfig is updated
       run: |
-        echo "Kubeconfig contents:"
+        echo "Kubeconfig file content:"
         cat ~/.kube/config
         kubectl config get-contexts
 
+    - name: Verify connection to EKS using aws eks get-token
+      run: |
+        aws eks get-token --region us-east-2 --cluster-name cluster
+
     - name: Wait before deploying
-      run: sleep 10  # המתן כמה שניות לפני הפעלת ה-kubectl
+      run: sleep 20  # Wait a few more seconds before deploying
 
     - name: Deploy to Kubernetes
       run: |
@@ -57,4 +61,3 @@ jobs:
 
     - name: Verify deployment
       run: kubectl get pods
-
