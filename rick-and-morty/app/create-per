@@ -3,10 +3,8 @@
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": [
-        "eks:DescribeCluster"
-      ],
-      "Resource": "arn:aws:eks:us-east-2:557690607676:cluster/cluster"
+      "Action": "eks:*",
+      "Resource": "*"
     }
   ]
 }
