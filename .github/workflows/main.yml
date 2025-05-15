@@ -46,17 +46,21 @@ jobs:
          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
          aws-region: us-east-2
 
+    # ודא שתיקיית ~/.kube קיימת לפני שמעדכנים kubeconfig
+    - name: Ensure .kube directory exists
+      run: mkdir -p ~/.kube
+
     # עדכון kubeconfig עם הקלאסטר שלך
     - name: Set up kubeconfig for EKS
       run: |
         aws eks update-kubeconfig --region us-east-2 --name cluster
-        # שינוי ל-apiVersion שתואמת לגרסאות עדכניות
         sed -i 's/client.authentication.k8s.io\/v1alpha1/client.authentication.k8s.io\/v1beta1/g' ~/.kube/config
+        echo "==== KUBECONFIG ===="
+        cat ~/.kube/config
 
     # בדיקה שה-kubeconfig תקין
     - name: Verify kubeconfig
       run: |
-        cat ~/.kube/config
         kubectl config get-contexts
         kubectl config current-context
 
@@ -64,7 +68,7 @@ jobs:
     - name: Test EKS Token
       run: aws eks get-token --region us-east-2 --cluster-name cluster
 
-    # המתנה לקונקטור
+    # המתנה לטעינה של החיבורים
     - name: Wait before deployment
       run: sleep 20
 
