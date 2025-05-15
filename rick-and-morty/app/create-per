@@ -6,7 +6,7 @@
       "Action": [
         "eks:DescribeCluster"
       ],
-      "Resource": "*"
+      "Resource": "arn:aws:eks:us-east-2:557690607676:cluster/cluster"
     }
   ]
 }
