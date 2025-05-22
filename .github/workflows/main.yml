@@ -1,9 +1,9 @@
-name: Build and Deploy 
+name: Build and Deploy
 
-on:   
-  push: 
+on: 
+  push:
     branches:
-      - main  
+      - main
 
 jobs:
   build-and-deploy:
@@ -13,72 +13,53 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: install kubectl
+      run: |
+        curl -LO "https://dl.k8s.io/release/v1.23.6/bin/linux/amd64/kubectl"
+        chmod +x kubectl
+        sudo mv kubectl /usr/local/bin/
+
+    - name: Install eksctl
+      run: |
+        curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+        sudo mv /tmp/eksctl /usr/local/bin
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-2
+
+    - name: Create EKS Cluster
+      run: |
+        eksctl get cluster --region us-east-2 --name pokemon-cluster ||\
+        eksctl create cluster \
+          --name pokemon-cluster \
+          --region us-east-2 \
+          --nodes 2 \
+          --node-type t3.mediium \
+          --with-oidc \
+          --managed \
+          --timeout 30m
+
+    - name: Update kubeconfig
+      run: |
+       aws eks update-kubeconfig --region us-east-2 --name pokemon-cluster
+       sed -i 's/client.authentication.k8s.io\/v1alpha1/client.authentication.k8s.io\/v1beta1/g' ~/.kube/config
+
     - name: Log in to Docker Hub
       run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
     - name: Build Docker image
-      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/pokemon-api:latest ./rick-and-morty/app
-
-    - name: Push Docker image
       run: docker push ${{ secrets.DOCKER_USERNAME }}/pokemon-api:latest
-
-    # התקנת kubectl גרסה 1.23.6
-    - name: Install kubectl
-      run: |
-        KUBECTL_VERSION="v1.23.6"
-        curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
-        chmod +x kubectl
-        sudo mv kubectl /usr/local/bin/
-
-    # התקנת aws-iam-authenticator (אם תצטרך)
-    - name: Install AWS IAM Authenticator
-      run: |
-        VERSION="0.5.7"
-        curl -Lo aws-iam-authenticator https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v${VERSION}/aws-iam-authenticator_${VERSION}_linux_amd64
-        chmod +x aws-iam-authenticator
-        sudo mv aws-iam-authenticator /usr/local/bin/
-
-    # התחברות ל-AWS
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-         aws-region: us-east-2
-
-    # ודא שתיקיית ~/.kube קיימת לפני שמעדכנים kubeconfig
-    - name: Ensure .kube directory exists
-      run: mkdir -p ~/.kube
-
-    # עדכון kubeconfig עם הקלאסטר שלך
-    - name: Set up kubeconfig for EKS
-      run: |
-        aws eks update-kubeconfig --region us-east-2 --name cluster
-        sed -i 's/client.authentication.k8s.io\/v1alpha1/client.authentication.k8s.io\/v1beta1/g' ~/.kube/config
-        echo "==== KUBECONFIG ===="
-        cat ~/.kube/config
-
-    # בדיקה שה-kubeconfig תקין
-    - name: Verify kubeconfig
-      run: |
-        kubectl config get-contexts
-        kubectl config current-context
-
-    # בדיקה שהחיבור לקלאסטר עובד
-    - name: Test EKS Token
-      run: aws eks get-token --region us-east-2 --cluster-name cluster
-
-    # המתנה לטעינה של החיבורים
-    - name: Wait before deployment
-      run: sleep 20
-
-    # פריסה לקוברנטיס
+    
     - name: Deploy to Kubernetes
       run: |
-        kubectl apply -f ./rick-and-morty/k8s/deployment.yaml
+        kubectl apply -f ./rick-and-morty/k8s/deployment,yaml
         kubectl apply -f ./rick-and-morty/k8s/service.yaml
         kubectl apply -f ./rick-and-morty/k8s/ingress.yaml
 
-    # בדיקת הפריסה
     - name: Verify deployment
       run: kubectl get pods
+      
