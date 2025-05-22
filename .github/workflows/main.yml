@@ -84,6 +84,5 @@ jobs:
         kubectl apply -f ./rick-and-morty/k8s/service.yaml
         kubectl apply -f ./rick-and-morty/k8s/ingress.yaml
 
-    - name: Verify deployment
+    - name: Show pods
       run: kubectl get pods
-
